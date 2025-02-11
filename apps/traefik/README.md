@@ -36,6 +36,14 @@ Adds to /etc/hosts
 echo "$(minikube ip) whoami.local traefik.local" | sudo tee -a /etc/hosts
 ```
 
+## Tunnel
+
+In a local environment, you need to enable the tunnel to see the load balancer working:
+
+```shell
+minikube tunnel
+```
+
 # Inspecting
 
 ```shell
