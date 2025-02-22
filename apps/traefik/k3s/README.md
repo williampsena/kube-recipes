@@ -35,14 +35,10 @@ kubectl apply -f whoami-deployment.yaml \
 
 # Configure local domain
 
-```shell
-minikube ip
-```
-
 Adds to /etc/hosts
 
 ```shell
-echo "$(minikube ip) whoami.local-k3s traefik.local-k3s" | sudo tee -a /etc/hosts
+echo "127.0.0.1 whoami.local-k3s traefik.local-k3s" | sudo tee -a /etc/hosts
 ```
 
 
