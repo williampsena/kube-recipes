@@ -1,0 +1,17 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-dashboard
+  namespace: default
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`traefik.local-k3s`)
+      kind: Rule
+      middlewares:
+        - name: traefik-dashboard-auth-middleware
+          namespace: default
+      services:
+        - name: api@internal
+          kind: TraefikService

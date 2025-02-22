@@ -1,0 +1,16 @@
+spec:
+  ports:
+    - name: web
+      nodePort: 32227
+      port: 80
+      protocol: TCP
+      targetPort: web
+    - name: websecure
+      nodePort: 30411
+      port: 443
+      protocol: TCP
+      targetPort: websecure
+    - name: traefik
+      port: 9000
+      protocol: TCP
+      targetPort: traefik
