@@ -12,6 +12,8 @@ curl -sfL https://get.k3s.io | sh -
 Starting k3s
 
 ```shell
+sudo systemctl disable k3s # Disable k3s from starting automatically on boot
+
 sudo systemctl start k3s
 ```
 
@@ -67,7 +69,7 @@ kubectl delete -f whoami-deployment.yaml \
 
 # Traefik dashboard
 
-## SOLUTION 1: Path Traefik Services
+## SOLUTION 1: Patch Traefik Services
 
 ```shell
 kubectl patch service traefik -n kube-system --patch "$(cat traefik-service-patch.yaml)"
