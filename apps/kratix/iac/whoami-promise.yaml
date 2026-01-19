@@ -1,0 +1,127 @@
+apiVersion: platform.kratix.io/v1alpha1
+kind: Promise
+metadata:
+  name: whoami
+  namespace: kratix-platform-system
+spec:
+  api:
+    apiVersion: whoami.example.com/v1
+    kind: Whoami
+    plural: whoamis
+    group: whoami.example.com
+    openapi:
+      schema:
+        $schema: http://json-schema.org/draft-07/schema#
+        type: object
+        properties:
+          name:
+            type: string
+            default: whoami
+            description: Name of the whoami deployment
+          replicas:
+            type: integer
+            default: 2
+            description: Number of replicas
+          port:
+            type: integer
+            default: 80
+            description: Container port
+  workflows:
+    resource:
+      configure:
+        - apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: whoami-pipeline
+            namespace: kratix-platform-system
+          data:
+            script.sh: |
+              #!/bin/sh
+              set -x
+              
+              NAME=$(jq -r '.metadata.name // "whoami"' /kratix/input/object.json)
+              REPLICAS=$(jq -r '.spec.replicas // 2' /kratix/input/object.json)
+              PORT=$(jq -r '.spec.port // 80' /kratix/input/object.json)
+              NAMESPACE=$(jq -r '.metadata.namespace // "default"' /kratix/input/object.json)
+              
+              cat > /kratix/output/resources.yaml <<'RESOURCEEOF'
+              apiVersion: v1
+              kind: Namespace
+              metadata:
+                name: REPLACE_NAMESPACE
+                labels:
+                  app: whoami
+              ---
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: whoami-deployment
+                namespace: REPLACE_NAMESPACE
+                labels:
+                  app: whoami
+              spec:
+                replicas: REPLACE_REPLICAS
+                strategy:
+                  type: RollingUpdate
+                  rollingUpdate:
+                    maxSurge: 1
+                    maxUnavailable: 0
+                selector:
+                  matchLabels:
+                    app: whoami
+                template:
+                  metadata:
+                    labels:
+                      app: whoami
+                  spec:
+                    containers:
+                    - name: whoami
+                      image: traefik/whoami:latest
+                      imagePullPolicy: IfNotPresent
+                      ports:
+                      - name: http
+                        containerPort: REPLACE_PORT
+                        hostPort: 8080
+                        protocol: TCP
+                      livenessProbe:
+                        httpGet:
+                          path: /
+                          port: http
+                        initialDelaySeconds: 5
+                        periodSeconds: 10
+                      readinessProbe:
+                        httpGet:
+                          path: /
+                          port: http
+                        initialDelaySeconds: 2
+                        periodSeconds: 5
+                      resources:
+                        requests:
+                          cpu: 10m
+                          memory: 32Mi
+                        limits:
+                          cpu: 100m
+                          memory: 128Mi
+              ---
+              apiVersion: v1
+              kind: Service
+              metadata:
+                name: whoami-svc
+                namespace: REPLACE_NAMESPACE
+                labels:
+                  app: whoami
+              spec:
+                type: NodePort
+                selector:
+                  app: whoami
+                ports:
+                - name: http
+                  port: REPLACE_PORT
+                  targetPort: http
+                  nodePort: 30080
+                  protocol: TCP
+              RESOURCEEOF
+              
+              sed -i "s|REPLACE_NAMESPACE|$NAMESPACE|g" /kratix/output/resources.yaml
+              sed -i "s|REPLACE_REPLICAS|$REPLICAS|g" /kratix/output/resources.yaml
+              sed -i "s|REPLACE_PORT|$PORT|g" /kratix/output/resources.yaml

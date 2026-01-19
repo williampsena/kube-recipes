@@ -1,0 +1,96 @@
+# Whoami Application - Complete Deployment
+# Single consolidated YAML for easy deployment
+#
+# Access methods:
+#   - HostPort:  http://localhost:8080 (direct, no port-forward needed)
+#   - NodePort:  http://localhost:30080 (via service)
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: whoami-demo
+  labels:
+    app: whoami
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whoami
+  namespace: whoami-demo
+  labels:
+    app: whoami
+    version: v1
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: whoami
+  template:
+    metadata:
+      labels:
+        app: whoami
+      annotations:
+        description: "Traefik whoami service for testing"
+    spec:
+      containers:
+      - name: whoami
+        image: traefik/whoami:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+          hostPort: 8080  # Direct host access
+        env:
+        - name: WHOAMI_PORT_NUMBER
+          value: "80"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 2
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 2
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: whoami
+  namespace: whoami-demo
+  labels:
+    app: whoami
+spec:
+  type: NodePort
+  selector:
+    app: whoami
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    nodePort: 30080
+    protocol: TCP
+  sessionAffinity: None

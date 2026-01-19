@@ -1,0 +1,189 @@
+apiVersion: platform.kratix.io/v1alpha1
+kind: Promise
+metadata:
+  name: nginx
+  namespace: kratix-platform-system
+spec:
+  api:
+    apiVersion: nginx.example.com/v1
+    kind: Nginx
+    plural: nginxes
+    group: nginx.example.com
+    openapi:
+      schema:
+        $schema: http://json-schema.org/draft-07/schema#
+        type: object
+        properties:
+          name:
+            type: string
+            default: nginx-app
+            description: Name of the nginx deployment
+          replicas:
+            type: integer
+            default: 3
+            description: Number of nginx replicas
+          port:
+            type: integer
+            default: 80
+            description: Port to expose
+          nodePort:
+            type: integer
+            default: 31080
+            description: NodePort for external access
+          resources:
+            type: object
+            properties:
+              cpu:
+                type: string
+                default: "100m"
+              memory:
+                type: string
+                default: "64Mi"
+  workflows:
+    resource:
+      configure:
+        - apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: nginx-pipeline
+            namespace: kratix-platform-system
+          data:
+            script.sh: |
+              #!/bin/sh
+              set -x
+              
+              NAME=$(jq -r '.metadata.name // "nginx-app"' /kratix/input/object.json)
+              REPLICAS=$(jq -r '.spec.replicas // 3' /kratix/input/object.json)
+              PORT=$(jq -r '.spec.port // 80' /kratix/input/object.json)
+              NODE_PORT=$(jq -r '.spec.nodePort // 31080' /kratix/input/object.json)
+              CPU=$(jq -r '.spec.resources.cpu // "100m"' /kratix/input/object.json)
+              MEMORY=$(jq -r '.spec.resources.memory // "64Mi"' /kratix/input/object.json)
+              NAMESPACE=$(jq -r '.metadata.namespace // "default"' /kratix/input/object.json)
+              
+              cat > /kratix/output/resources.yaml <<'RESOURCEEOF'
+              apiVersion: v1
+              kind: Namespace
+              metadata:
+                name: REPLACE_NAMESPACE
+                labels:
+                  app: nginx
+              ---
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: REPLACE_NAME
+                namespace: REPLACE_NAMESPACE
+                labels:
+                  app: nginx
+              spec:
+                replicas: REPLACE_REPLICAS
+                strategy:
+                  type: RollingUpdate
+                  rollingUpdate:
+                    maxSurge: 1
+                    maxUnavailable: 0
+                selector:
+                  matchLabels:
+                    app: nginx
+                template:
+                  metadata:
+                    labels:
+                      app: nginx
+                  spec:
+                    containers:
+                    - name: nginx
+                      image: nginx:latest
+                      imagePullPolicy: IfNotPresent
+                      ports:
+                      - name: http
+                        containerPort: REPLACE_PORT
+                        protocol: TCP
+                      livenessProbe:
+                        httpGet:
+                          path: /
+                          port: http
+                        initialDelaySeconds: 10
+                        periodSeconds: 10
+                        timeoutSeconds: 3
+                      readinessProbe:
+                        httpGet:
+                          path: /
+                          port: http
+                        initialDelaySeconds: 5
+                        periodSeconds: 5
+                        timeoutSeconds: 2
+                      resources:
+                        requests:
+                          cpu: REPLACE_CPU
+                          memory: REPLACE_MEMORY
+                        limits:
+                          cpu: REPLACE_CPU
+                          memory: REPLACE_MEMORY
+                      volumeMounts:
+                      - name: html
+                        mountPath: /usr/share/nginx/html
+                    volumes:
+                    - name: html
+                      configMap:
+                        name: REPLACE_NAME-html
+              ---
+              apiVersion: v1
+              kind: ConfigMap
+              metadata:
+                name: REPLACE_NAME-html
+                namespace: REPLACE_NAMESPACE
+              data:
+                index.html: |
+                  <!DOCTYPE html>
+                  <html>
+                  <head>
+                    <title>Kratix Nginx Promise</title>
+                    <style>
+                      body { font-family: Arial, sans-serif; margin: 40px; }
+                      .container { background: #f0f0f0; padding: 20px; border-radius: 5px; }
+                      h1 { color: #2c3e50; }
+                      .info { background: white; padding: 15px; margin: 10px 0; border-left: 4px solid #3498db; }
+                    </style>
+                  </head>
+                  <body>
+                    <div class="container">
+                      <h1>🎉 Kratix Nginx Promise</h1>
+                      <div class="info">
+                        <p><strong>Deployment:</strong> REPLACE_NAME</p>
+                        <p><strong>Namespace:</strong> REPLACE_NAMESPACE</p>
+                        <p><strong>Replicas:</strong> REPLACE_REPLICAS</p>
+                      </div>
+                      <div class="info">
+                        <p>This nginx was deployed using Kratix Promise!</p>
+                        <p>The Promise framework allows you to define reusable application patterns.</p>
+                      </div>
+                    </div>
+                  </body>
+                  </html>
+              ---
+              apiVersion: v1
+              kind: Service
+              metadata:
+                name: REPLACE_NAME-svc
+                namespace: REPLACE_NAMESPACE
+                labels:
+                  app: nginx
+              spec:
+                type: NodePort
+                selector:
+                  app: nginx
+                ports:
+                - name: http
+                  port: REPLACE_PORT
+                  targetPort: http
+                  nodePort: REPLACE_NODE_PORT
+                  protocol: TCP
+              RESOURCEEOF
+              
+              sed -i "s|REPLACE_NAMESPACE|$NAMESPACE|g" /kratix/output/resources.yaml
+              sed -i "s|REPLACE_NAME|$NAME|g" /kratix/output/resources.yaml
+              sed -i "s|REPLACE_REPLICAS|$REPLICAS|g" /kratix/output/resources.yaml
+              sed -i "s|REPLACE_PORT|$PORT|g" /kratix/output/resources.yaml
+              sed -i "s|REPLACE_NODE_PORT|$NODE_PORT|g" /kratix/output/resources.yaml
+              sed -i "s|REPLACE_CPU|$CPU|g" /kratix/output/resources.yaml
+              sed -i "s|REPLACE_MEMORY|$MEMORY|g" /kratix/output/resources.yaml
