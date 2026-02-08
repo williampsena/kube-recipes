@@ -1,5 +1,7 @@
 # Kind Hello World 🚀
 
+# Kind Hello World 🚀
+
 A minimal Kubernetes setup using [Kind](https://kind.sigs.k8s.io/) with a simple whoami pod.
 
 ## 📋 Prerequisites
@@ -42,3 +44,7 @@ make delete
 - The worker node is labeled with `app-purpose=apps`
 - Pod uses nodeSelector to schedule on the worker
 - NodePort 30080 is mapped to host port 8080
+
+## 📚 Related Resources
+
+- [Set up a Kubernetes Cluster with Kind in Under 10 Minutes](https://willsena.dev/suba-um-cluster-kubernetes-com-kind-em-menos-de-10-minutos/)
