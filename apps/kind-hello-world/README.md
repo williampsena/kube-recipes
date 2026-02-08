@@ -1,7 +1,5 @@
 # Kind Hello World 🚀
 
-# Kind Hello World 🚀
-
 A minimal Kubernetes setup using [Kind](https://kind.sigs.k8s.io/) with a simple whoami pod.
 
 ## 📋 Prerequisites
