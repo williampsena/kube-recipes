@@ -47,4 +47,4 @@ make delete
 
 ## 📚 Related Resources
 
-- [Set up a Kubernetes Cluster with Kind in Under 10 Minutes](https://willsena.dev/suba-um-cluster-kubernetes-com-kind-em-menos-de-10-minutos/)
+- [🇧🇷 Suba um cluster Kubernetes com Kind em menos de 10 minutos](https://willsena.dev/suba-um-cluster-kubernetes-com-kind-em-menos-de-10-minutos/)
