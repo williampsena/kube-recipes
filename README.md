@@ -4,6 +4,48 @@ A collection of Kubernetes examples and patterns using modern tools.
 
 ## 📁 Projects
 
+### [Gateway API Demo](./apps/gateway-api/README.md)
+Learn about Kubernetes Gateway API using Istio as the gateway provider with observability through Prometheus.
+
+**What you'll find:**
+- Istio service mesh integration with minimal profile
+- Gateway API and HTTPRoute configuration
+- Sample "whoami" application deployment
+- Prometheus monitoring setup
+- Production-ready patterns for modern routing
+
+**Quick start:**
+```bash
+cd apps/gateway-api
+make create      # Create KinD cluster
+make install     # Install Gateway API CRDs, Istio & Prometheus
+make deploy      # Deploy demo application
+make port-forward # Access the services
+```
+
+**Learn more:** [Gateway API Documentation](./apps/gateway-api/README.md)
+
+---
+
+### [Kind Hello World](./apps/kind-hello-world/README.md)
+A minimal Kubernetes setup example using Kind with a simple whoami pod - perfect for beginners.
+
+**What you'll find:**
+- Multi-node Kind cluster (1 control-plane + 1 worker)
+- Pod and NodePort Service examples
+- Simple automation with Makefile
+- Perfect starting point for Kubernetes learning
+
+**Quick start:**
+```bash
+cd apps/kind-hello-world
+make create      # Create KinD cluster
+kubectl apply -f whoami-pod.yaml  # Deploy whoami
+curl http://localhost:8080        # Access the app
+```
+
+---
+
 ### [Kratix Platform](./apps/kratix/README.md)
 Learn how to build reusable application patterns using the Kratix platform framework.
 
@@ -57,11 +99,13 @@ Each includes:
 
 ## 🎯 Examples Overview
 
-| Project | Type | Best For |
-|---------|------|----------|
-| Kratix | Framework | Learning Promise patterns |
-| Traefik k3s | Config | Local reverse proxy setup |
-| Traefik minikube | Config | Minikube testing |
+| Project | Type | Best For | Level |
+|---------|------|----------|-------|
+| Kind Hello World | Minimal Setup | Getting started with Kubernetes | Beginner |
+| Gateway API Demo | Service Mesh | Modern routing with Istio & Prometheus | Intermediate |
+| Kratix | Framework | Learning Promise patterns & reusable apps | Advanced |
+| Traefik k3s | Config | Local reverse proxy with k3s | Intermediate |
+| Traefik minikube | Config | Local reverse proxy with minikube | Intermediate |
 
 ---
 
